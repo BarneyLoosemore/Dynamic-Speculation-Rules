@@ -21,6 +21,17 @@ export const footer = `
       <p>I am a footer</p>
     </footer>
   </body>
+  <script type="module">
+    document.addEventListener("prerenderingchange", async () => {
+      await fetch("/increment-article-click", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: window.location.pathname }),
+      })
+    }, { once: true });
+  </script>
   </html>
   `;
 
@@ -48,7 +59,7 @@ export const templateArticle = ({
   return `
     <li class="article-card article-card--${cardClass}">
       <article id="${id}">
-        <a href="/${id}">
+        <a href="/articles/${id}">
           <img src="${image}" alt="" loading=${isLCP ? "eager" : "lazy"} />
           <h2>${title}</h2>
           <span>${category}</span>
