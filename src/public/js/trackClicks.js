@@ -1,6 +1,6 @@
-const links = document.querySelectorAll("a");
+const articleLinks = document.querySelectorAll(".article-card a");
 
-for (const link of links) {
+for (const link of articleLinks) {
   link.addEventListener("click", async (event) => {
     navigator.sendBeacon(
       "/increment-article-click",

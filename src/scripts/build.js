@@ -40,13 +40,13 @@ const buildPage = async (path, ...content) => {
   console.log("Building site...");
 
   await fsp.rm("_dist", { recursive: true, force: true });
-  await fsp.mkdir("_dist/articles", { recursive: true });
+  await fsp.mkdir("_dist");
 
   const articles = await getArticles();
   const articleList = await getArticleList();
 
   await buildPage(
-    "articles/index.html",
+    "index.html",
     articleList,
     "<script type='module' src='/js/trackClicks.js'></script>"
   );
@@ -54,7 +54,7 @@ const buildPage = async (path, ...content) => {
   await Promise.all(
     articles.map(async ({ id }) => {
       const articleDetail = await getArticleDetail(id);
-      await buildPage(`/articles/${id}.html`, articleDetail);
+      await buildPage(`/${id}.html`, articleDetail);
     })
   );
 

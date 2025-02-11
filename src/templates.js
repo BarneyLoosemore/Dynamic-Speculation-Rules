@@ -5,12 +5,14 @@ export const header = `
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/styles/index.css" />
-    <link rel="preload" href="/fonts/inconsolata.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/inconsolata.woff2" as="font" type="font/woff2" crossorigin="anonymous">
     <title>News Site</title>
   </head>
   <body>
     <header>
-      <h1>News Site</h1>
+      <a href="/">
+        <h1>News Site</h1>
+      </a>
     </header>
     <main>
   `;
@@ -48,7 +50,7 @@ export const templateArticle = ({
   return `
     <li class="article-card article-card--${cardClass}">
       <article id="${id}">
-        <a href="/articles/${id}">
+        <a href="/${id}">
           <img src="${image}" alt="" loading=${isLCP ? "eager" : "lazy"} />
           <h2>${title}</h2>
           <span>${category}</span>
