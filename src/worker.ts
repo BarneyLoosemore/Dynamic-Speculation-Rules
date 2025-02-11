@@ -6,15 +6,17 @@ const addRandomDelay = () => {
 };
 
 const incrementArticleClick = async (
-  url: string,
+  request: Request,
   store: Env["SPECULATION_RULES"]
 ) => {
+  const url = await request.text();
   const articleClicks = JSON.parse((await store.get("articleClicks")) ?? "{}");
   const incrementedArticleClicks = JSON.stringify({
     ...articleClicks,
     [url]: (articleClicks[url] ?? 0) + 1,
   });
   await store.put("articleClicks", incrementedArticleClicks);
+  return new Response("OK", { status: 200 });
 };
 
 const createSpeculationRules = async (store: Env["SPECULATION_RULES"]) => {
@@ -33,7 +35,7 @@ const createSpeculationRules = async (store: Env["SPECULATION_RULES"]) => {
 };
 
 export default {
-  async fetch(request, env, ctx): Promise<Response> {
+  async fetch(request, env): Promise<Response> {
     const url = new URL(request.url);
     const store = env.SPECULATION_RULES;
 
@@ -41,22 +43,14 @@ export default {
       url.pathname === "/increment-article-click" &&
       request.method === "POST"
     ) {
-      const { url } = await request.json<{ url: string }>();
-      await incrementArticleClick(url, store);
-      return new Response("Incremented link click", { status: 200 });
+      return incrementArticleClick(request, store);
     }
 
-    if (request.headers.get("Accept")?.includes("text/html")) {
-      const referer = request.headers.get("Referer");
-      const refererUrl = referer ? new URL(referer) : null;
-      const store = env.SPECULATION_RULES;
-      const shouldTrackArticleClick =
-        refererUrl?.pathname === "/articles/" &&
-        refererUrl?.pathname !== url.pathname;
+    const isDocumentRequest = request.headers
+      .get("Accept")
+      ?.includes("text/html");
 
-      if (shouldTrackArticleClick)
-        ctx.waitUntil(incrementArticleClick(url.pathname, store));
-
+    if (isDocumentRequest) {
       await addRandomDelay();
       const response = await env.ASSETS.fetch(request);
 

@@ -21,17 +21,6 @@ export const footer = `
       <p>I am a footer</p>
     </footer>
   </body>
-  <script type="module">
-    document.addEventListener("prerenderingchange", async () => {
-      await fetch("/increment-article-click", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url: window.location.pathname }),
-      })
-    }, { once: true });
-  </script>
   </html>
   `;
 

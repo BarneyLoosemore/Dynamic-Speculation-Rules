@@ -31,8 +31,8 @@ const getArticleDetail = async (id) => {
   return templateArticleDetail(article);
 };
 
-const buildPage = async (path, content) => {
-  const html = header + content + footer;
+const buildPage = async (path, ...content) => {
+  const html = header + content.join("") + footer;
   await fsp.writeFile(`_dist/${path}`, html);
 };
 
@@ -45,7 +45,11 @@ const buildPage = async (path, content) => {
   const articles = await getArticles();
   const articleList = await getArticleList();
 
-  await buildPage("articles/index.html", articleList);
+  await buildPage(
+    "articles/index.html",
+    articleList,
+    "<script type='module' src='/js/trackClicks.js'></script>"
+  );
 
   await Promise.all(
     articles.map(async ({ id }) => {
