@@ -1,15 +1,21 @@
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "dynamic-speculation-rules",
-	"main": "src/worker.ts",
-	"compatibility_date": "2025-02-04",
-	"compatibility_flags": ["nodejs_compat"],
-	"assets": {
-		"binding": "ASSETS",
-		"directory": "./_dist",
-		"run_worker_first": true
-	},
-	"observability": {
-		"enabled": true
-	}
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dynamic-speculation-rules",
+  "main": "src/worker.ts",
+  "compatibility_date": "2025-02-04",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./_dist",
+    "run_worker_first": true
+  },
+  "observability": {
+    "enabled": true
+  },
+  "kv_namespaces": [
+    {
+      "binding": "SPECULATION_RULES",
+      "id": "38dc8b8665a94dd798d41af9ea2c40c0"
+    }
+  ]
 }

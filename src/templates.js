@@ -25,27 +25,27 @@ export const footer = `
   `;
 
 export const templateArticle = ({
-	index,
-	id,
-	title,
-	published,
-	category,
-	image,
+  index,
+  id,
+  title,
+  published,
+  category,
+  image,
 }) => {
-	const ONE_HOUR_MS = 3600000;
-	const MAX_LCP_ARTICLES = 6;
-	const hoursSincePublished = Math.floor(
-		(Date.now() - new Date(published).getTime()) / ONE_HOUR_MS
-	);
-	const cardClass =
-		{
-			Food: "large",
-			Fashion: "medium",
-		}[category] ?? "small";
+  const ONE_HOUR_MS = 3600000;
+  const MAX_LCP_ARTICLES = 6;
+  const hoursSincePublished = Math.floor(
+    (Date.now() - new Date(published).getTime()) / ONE_HOUR_MS
+  );
+  const cardClass =
+    {
+      Food: "large",
+      Fashion: "medium",
+    }[category] ?? "small";
 
-	const isLCP = index <= MAX_LCP_ARTICLES;
+  const isLCP = index <= MAX_LCP_ARTICLES;
 
-	return `
+  return `
     <li class="article-card article-card--${cardClass}">
       <article id="${id}">
         <a href="/${id}">
@@ -60,19 +60,19 @@ export const templateArticle = ({
 };
 
 export const templateArticleDetail = ({
-	title,
-	category,
-	image,
-	author,
-	published,
-	content,
+  title,
+  category,
+  image,
+  author,
+  published,
+  content,
 }) => {
-	const publishedDate = new Date(published).toLocaleDateString("en-GB", {
-		year: "numeric",
-		month: "long",
-		day: "numeric",
-	});
-	return `
+  const publishedDate = new Date(published).toLocaleDateString("en-GB", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  return `
   <section class="article-detail">
     <h2>${title}</h2>
     <img src="${image}" />
