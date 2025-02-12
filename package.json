@@ -1,19 +1,23 @@
 {
-	"name": "dynamic-speculation-rules",
-	"version": "0.0.0",
-	"private": true,
-	"type": "module",
-	"scripts": {
-		"deploy": "wrangler deploy",
-		"build": "node src/scripts/build.js",
-		"dev": "wrangler dev",
-		"start": "wrangler dev",
-		"test": "vitest",
-		"cf-typegen": "wrangler types"
-	},
-	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20250204.0",
-		"typescript": "^5.5.2",
-		"wrangler": "^3.107.3"
-	}
+  "name": "dynamic-speculation-rules",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "build": "node src/scripts/build.js",
+    "dev": "wrangler dev",
+    "start": "npm run build && wrangler dev",
+    "cf-typegen": "wrangler types",
+    "clear-store": "wrangler kv key delete articleClicks --binding=SPECULATION_RULES",
+    "clear-store:local": "wrangler kv key delete articleClicks --binding=SPECULATION_RULES --local",
+    "get-store": "wrangler kv key get articleClicks --binding=SPECULATION_RULES | xargs echo"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250204.0",
+    "lighthouse": "^12.3.0",
+    "puppeteer": "^24.2.0",
+    "typescript": "^5.5.2",
+    "wrangler": "^3.107.3"
+  }
 }
