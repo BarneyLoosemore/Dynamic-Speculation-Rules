@@ -1,11 +1,11 @@
 const addRandomDelay = () => {
-  const MIN = 200;
-  const MAX = 500;
+  const MIN = 400;
+  const MAX = 800;
   const delay = Math.floor(Math.random() * (MAX - MIN + 1)) + MIN;
   return new Promise((resolve) => setTimeout(resolve, delay));
 };
 
-const incrementArticleClick = async (
+const handleArticleClick = async (
   request: Request,
   store: Env["SPECULATION_RULES"]
 ) => {
@@ -24,26 +24,24 @@ const createSpeculationRules = async (store: Env["SPECULATION_RULES"]) => {
     (await store.get("articleClicks")) ?? "{}"
   ) as Record<string, number>;
 
-  const mostClickedArticleUrls = Object.entries(articleClicks)
+  const articleUrlsSortedByClicks = Object.entries(articleClicks)
     .sort(([, aClicks], [, bClicks]) => bClicks - aClicks)
-    .slice(0, 3)
     .map(([url]) => url);
 
-  return `<script type='speculationrules'>{"prerender": [{ "urls": ${JSON.stringify(
-    mostClickedArticleUrls
-  )}, "eagerness": "immediate", "referrer_policy": "no-referrer" }]}</script>`;
+  const immediatePrerenderUrls = JSON.stringify(
+    articleUrlsSortedByClicks.slice(0, 3)
+  );
+
+  return `<script type='speculationrules'>{"prerender": [{ "urls": ${immediatePrerenderUrls}, "eagerness": "immediate" }]}</script>`;
 };
 
 export default {
   async fetch(request, env): Promise<Response> {
-    const url = new URL(request.url);
+    const { pathname } = new URL(request.url);
     const store = env.SPECULATION_RULES;
 
-    if (
-      url.pathname === "/increment-article-click" &&
-      request.method === "POST"
-    ) {
-      return incrementArticleClick(request, store);
+    if (pathname === "/article-click" && request.method === "POST") {
+      return handleArticleClick(request, store);
     }
 
     const isDocumentRequest = request.headers
@@ -53,6 +51,11 @@ export default {
     if (isDocumentRequest) {
       await addRandomDelay();
       const response = await env.ASSETS.fetch(request);
+
+      const isSpeculationRulesDisabled = request.headers.get(
+        "X-Disable-Speculation-Rules"
+      );
+      if (isSpeculationRulesDisabled) return response;
 
       return new HTMLRewriter()
         .on("head", {

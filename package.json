@@ -7,7 +7,7 @@
     "deploy": "wrangler deploy",
     "build": "node src/scripts/build.js",
     "dev": "wrangler dev",
-    "start": "npm run build && wrangler dev",
+    "start": "npm run clear-store:local && npm run build && wrangler dev",
     "cf-typegen": "wrangler types",
     "clear-store": "wrangler kv key delete articleClicks --binding=SPECULATION_RULES",
     "clear-store:local": "wrangler kv key delete articleClicks --binding=SPECULATION_RULES --local",
@@ -15,7 +15,6 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250204.0",
-    "lighthouse": "^12.3.0",
     "puppeteer": "^24.2.0",
     "typescript": "^5.5.2",
     "wrangler": "^3.107.3"
