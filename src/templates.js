@@ -85,3 +85,61 @@ export const templateArticleDetail = ({
   </section>
 `;
 };
+
+const calcMean = (data) => {
+  const sum = data.reduce((acc, value) => acc + value, 0);
+  return sum / data.length;
+};
+
+const calculatePercentile = (data, percentile) => {
+  const sortedData = data.filter(Boolean).sort((a, b) => a - b);
+  const index = Math.ceil((percentile / 100) * sortedData.length);
+  return sortedData[index];
+};
+
+const zip = (a, b) => a.map((k, i) => [k, b[i]]);
+
+export const templateResults = (results) => {
+  const { speculationLcpResults, noSpeculationLcpResults } = results;
+
+  const zippedResults = zip(speculationLcpResults, noSpeculationLcpResults);
+
+  const calculatedResults = ["mean", 50, 75, 90, 95].map((percentile) => {
+    const calcFn = percentile === "mean" ? calcMean : calculatePercentile;
+    const speculation = calcFn(speculationLcpResults, percentile);
+    const noSpeculation = calcFn(noSpeculationLcpResults, percentile);
+    return [percentile, speculation, noSpeculation];
+  });
+
+  const tableRows = calculatedResults.map(
+    ([percentile, speculation, noSpeculation]) => `
+    <tr>
+      <td>${
+        percentile === "mean"
+          ? "Mean"
+          : percentile === 50
+          ? "Median"
+          : `${percentile}th Percentile`
+      }</td>
+      <td>${speculation}ms</td>
+      <td>${noSpeculation}ms</td>
+    </tr>
+  `
+  );
+
+  return `
+  <table>
+    <caption>LCP Results</caption>
+    <thead>
+      <tr>
+        <th></th>
+        <th>Speculation</th>
+        <th>No Speculation</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${tableRows.join("")}
+    <tbody>
+  </table>
+  `;
+};

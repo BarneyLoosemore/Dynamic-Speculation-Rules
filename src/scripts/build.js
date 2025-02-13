@@ -4,6 +4,7 @@ import {
   footer,
   templateArticle,
   templateArticleDetail,
+  templateResults,
 } from "../templates.js";
 
 // TODO: compress all images
@@ -45,6 +46,17 @@ const buildPage = async (path, ...content) => {
   const articles = await getArticles();
   const articleList = await getArticleList();
 
+  const speculationLcpResults = JSON.parse(
+    await fsp.readFile("tests/lcp-results-speculation-rules.json", "utf-8")
+  );
+  const noSpeculationLcpResults = JSON.parse(
+    await fsp.readFile("tests/lcp-results-no-speculation-rules.json", "utf-8")
+  );
+  const resultsHtml = templateResults({
+    speculationLcpResults,
+    noSpeculationLcpResults,
+  });
+
   await buildPage(
     "index.html",
     articleList,
@@ -57,6 +69,8 @@ const buildPage = async (path, ...content) => {
       await buildPage(`/${id}.html`, articleDetail);
     })
   );
+
+  await buildPage("/results.html", resultsHtml);
 
   await fsp.cp(`src/public`, `_dist`, {
     recursive: true,

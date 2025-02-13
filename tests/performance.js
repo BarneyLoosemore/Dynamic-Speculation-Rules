@@ -1,24 +1,18 @@
 import puppeteer from "puppeteer";
+import fsp from "fs/promises";
 
-const TEST_RUNS = 100;
-const MAX_CONCURRENT_TESTS = 5;
+const TEST_RUNS = 500;
+const MAX_CONCURRENT_TESTS = 10;
 
-const MIN_LINK_NUMBER = 1;
-const MAX_LINK_NUMBER = 10;
-
-const mostPopularLinks = [2, 4, 9];
-const linkClicks = Array.from({ length: TEST_RUNS }, () => {
+const mostPopularLinks = [3, 6, 8];
+const articleLinks = Array.from({ length: TEST_RUNS }, () => {
   const fiftyFifty = Math.random() < 0.5;
   if (fiftyFifty) {
     return mostPopularLinks[
       Math.floor(Math.random() * mostPopularLinks.length)
     ];
-  } else {
-    return (
-      Math.floor(Math.random() * (MAX_LINK_NUMBER - MIN_LINK_NUMBER + 1)) +
-      MIN_LINK_NUMBER
-    );
   }
+  return Math.floor(Math.random() * 10) + 1;
 });
 
 const chunkArray = (array, size) =>
@@ -43,18 +37,16 @@ const reportLCP = () => {
 };
 
 const runTest = async ({ linkNumber, speculationRulesEnabled }) => {
-  const browser = await puppeteer.launch({
-    headless: false,
-  });
+  const browser = await puppeteer.launch();
   const context = await browser.createBrowserContext();
   const page = await context.newPage();
-  // const client = await page.createCDPSession();
-  // await client.send("Network.emulateNetworkConditions", {
-  //   offline: false,
-  //   downloadThroughput: 15000,
-  //   uploadThroughput: 6750,
-  //   latency: 120,
-  // });
+  const client = await page.createCDPSession();
+  await client.send("Network.emulateNetworkConditions", {
+    offline: false,
+    downloadThroughput: 9000,
+    uploadThroughput: 6750,
+    latency: 150,
+  });
 
   if (!speculationRulesEnabled) {
     await page.setExtraHTTPHeaders({
@@ -62,35 +54,33 @@ const runTest = async ({ linkNumber, speculationRulesEnabled }) => {
     });
   }
 
-  await page.goto("http://localhost:8787", {
-    waitUntil: "networkidle0",
-  });
-
-  await new Promise((resolve) => setTimeout(resolve, 2500));
+  await page
+    .goto("http://localhost:8787", {
+      timeout: 10000,
+      waitUntil: "networkidle0",
+    })
+    .catch(() => {});
 
   const link = await page.$(`.article-card:nth-of-type(${linkNumber}) a`);
-
+  const linkUrl = await page.evaluate((el) => el.href, link);
   await link.click();
-  await page.waitForNavigation({
-    waitUntil: "networkidle0",
-  });
+
+  await page
+    .waitForNavigation({
+      timeout: 5000,
+      waitUntil: "networkidle0",
+    })
+    .catch(() => {});
 
   await page.evaluate(reportLCP);
   await page.waitForFunction(() => window.lcpRecorded);
   const lcp = await page.evaluate(() => window.largestContentfulPaint);
 
-  console.log(`Link number ${linkNumber}: Largest Contentful Paint: ${lcp}ms`);
+  console.log(`Link /${linkUrl}: Largest Contentful Paint: ${lcp}ms`);
 
   await browser.close().catch(console.error);
 
   return lcp;
-};
-
-const timeoutTest = async (timeout, test) => {
-  return Promise.race([
-    test,
-    new Promise((resolve) => setTimeout(() => resolve(null), timeout)),
-  ]);
 };
 
 const calculatePercentile = (data, percentile) => {
@@ -107,29 +97,27 @@ const calcMean = (data) => {
 const runTests = async ({ speculationRulesEnabled }) => {
   const lcpResults = [];
 
-  const testChunks = chunkArray(linkClicks, MAX_CONCURRENT_TESTS);
+  const testChunks = chunkArray(articleLinks, MAX_CONCURRENT_TESTS);
   for (const chunk of testChunks) {
     const chunkTests = chunk.map((linkNumber) =>
-      timeoutTest(
-        30000,
-        runTest({ linkNumber, speculationRulesEnabled }).catch((error) =>
-          console.error(`Link number ${linkNumber} failed`, error)
-        )
+      runTest({ linkNumber, speculationRulesEnabled }).catch((error) =>
+        console.error(`Link number ${linkNumber} failed`, error)
       )
     );
-    const chunkResults = await Promise.all(chunkTests);
+    const chunkResults = (await Promise.all(chunkTests)).filter(Boolean);
     lcpResults.push(...chunkResults);
-  }
-
-  for (const linkNumber of linkClicks) {
-    const lcp = await runTest({ linkNumber, speculationRulesEnabled });
-    lcpResults.push(lcp);
   }
 
   console.log(lcpResults);
   console.log(`75th percentile: ${calculatePercentile(lcpResults, 75)}ms`);
   console.log(`95th percentile: ${calculatePercentile(lcpResults, 95)}ms`);
   console.log(`Mean: ${calcMean(lcpResults)}ms`);
+  await fsp.writeFile(
+    `tests/lcp-results-${
+      speculationRulesEnabled ? "speculation-rules" : "no-speculation-rules"
+    }.json`,
+    JSON.stringify(lcpResults)
+  );
 };
 
 (async () => {
