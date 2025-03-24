@@ -8,4 +8,6 @@ And I wondered if it could be adapted to other performance-oriented APIs?
 
 # Speculation Rules
 
-As a primer,
+As a primer, the Speculation Rules API is a (currently Chromium-only) replacement for <link rel="prefetch"> and <link rel="prerender"> for documents. It allows you to declaratively specify what pages to prefetch or prerender, as well as how urgently to do this. It's powerful; a few lines and you've got yourself SPA-esque (link here) instant navigations (but none of the associated rube-goldberg machine complexity).
+
+Because it's powerful
